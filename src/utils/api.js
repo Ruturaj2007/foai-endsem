@@ -79,18 +79,17 @@ export const fetchWithRetry = async (
 // SECTION A: ISS TRACKING API
 // ============================================================
 
-const ISS_API_BASE = 'http://api.open-notify.org';
-
 /**
- * Fetches the current ISS position.
+ * Fetches the current ISS position using an HTTPS-compatible API.
  * @returns {Promise<{ latitude: number, longitude: number, timestamp: number }>}
  */
 export const fetchISSPosition = async () => {
-  const data = await fetchWithRetry(`${ISS_API_BASE}/iss-now.json`, {}, 3, 3000);
+  // Using wheretheiss.at which natively supports HTTPS
+  const data = await fetchWithRetry('https://api.wheretheiss.at/v1/satellites/25544', {}, 3, 3000);
 
   return {
-    latitude: parseFloat(data.iss_position.latitude),
-    longitude: parseFloat(data.iss_position.longitude),
+    latitude: parseFloat(data.latitude),
+    longitude: parseFloat(data.longitude),
     timestamp: data.timestamp,
   };
 };
@@ -100,11 +99,12 @@ export const fetchISSPosition = async () => {
  * @returns {Promise<{ count: number, people: Array<{ name: string, craft: string }> }>}
  */
 export const fetchAstronauts = async () => {
-  const data = await fetchWithRetry(`${ISS_API_BASE}/astros.json`);
+  // Using a proxy because api.open-notify.org does not support HTTPS natively
+  const data = await fetchWithRetry('https://api.allorigins.win/raw?url=http://api.open-notify.org/astros.json');
 
   return {
     count: data.number,
-    people: data.people, // Each entry has { name, craft }
+    people: data.people || [], // Each entry has { name, craft }
   };
 };
 
